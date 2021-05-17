@@ -446,6 +446,15 @@ int wifi_start_supplicant(int p2p_supported)
     const prop_info *pi;
     unsigned serial = 0, i;
 
+/**
+ * SD-4169 Use single supplicant for STA and P2P operations
+ * A separate 'p2p_supplicant' service is not used for P2P operations.
+ * The 'wpa_supplicant' service needs to be used for P2P as well by
+ * starting the service with wlan0 and p2p0 interfaces.
+ */
+#if WLAN_VENDOR == 8
+    p2p_supported = 0;
+#endif
     if (p2p_supported) {
         strcpy(supplicant_name, P2P_SUPPLICANT_NAME);
         strcpy(supplicant_prop_name, P2P_PROP_NAME);
@@ -472,6 +481,20 @@ int wifi_start_supplicant(int p2p_supported)
         ALOGE("Wi-Fi will not be enabled");
         return -1;
     }
+
+/**
+ * SD-4169 Use single supplicant for STA and P2P operations
+ * A separate 'p2p_supplicant' service is not used for P2P operations.
+ * The 'wpa_supplicant' service needs to be used for P2P as well by
+ * starting the service with wlan0 and p2p0 interfaces.
+ */
+#if WLAN_VENDOR == 8
+    /* Ensure P2P config file exists */
+    if (ensure_config_file_exists(P2P_CONFIG_FILE) < 0) {
+        ALOGE("Failed to create P2P config file");
+        return -1;
+    }
+#endif
 
     if (ensure_entropy_file_exists() < 0) {
         ALOGE("Wi-Fi entropy file was not created");
@@ -526,6 +549,15 @@ int wifi_stop_supplicant(int p2p_supported)
     char supp_status[PROPERTY_VALUE_MAX] = {'\0'};
     int count = 50; /* wait at most 5 seconds for completion */
 
+/**
+ * SD-4169 Use single supplicant for STA and P2P operations
+ * A separate 'p2p_supplicant' service is not used for P2P operations.
+ * The 'wpa_supplicant' service needs to be used for P2P as well by
+ * starting the service with wlan0 and p2p0 interfaces.
+ */
+#if WLAN_VENDOR == 8
+    p2p_supported = 0;
+#endif
     if (p2p_supported) {
         strcpy(supplicant_name, P2P_SUPPLICANT_NAME);
         strcpy(supplicant_prop_name, P2P_PROP_NAME);
